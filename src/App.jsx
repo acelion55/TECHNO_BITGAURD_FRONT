@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import useStore from './store/useStore'
 import LoginPage from './pages/LoginPage'
 import KycPage from './pages/KycPage'
+import WalletSetupPage from './pages/WalletSetupPage'
 import Layout from './components/layout/Layout'
 import DashboardPage from './pages/DashboardPage'
 import DcaPage from './pages/DcaPage'
@@ -14,7 +15,7 @@ import './App.css'
 
 function App() {
   const { user, fetchPrice, restoreSession, logout } = useStore()
-  const [authView, setAuthView]           = useState('login')  // 'login' | 'kyc'
+  const [authView, setAuthView]             = useState('login') // 'login' | 'kyc'
   const [sessionChecked, setSessionChecked] = useState(false)
 
   useEffect(() => {
@@ -30,6 +31,7 @@ function App() {
     return () => clearInterval(interval)
   }, [])
 
+  // Loading spinner while checking session
   if (!sessionChecked) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
@@ -38,12 +40,19 @@ function App() {
     )
   }
 
+  // Not logged in → login or KYC
   if (!user) {
     return authView === 'login'
       ? <LoginPage onSwitch={() => setAuthView('kyc')} switchLabel="New user? Complete KYC" />
       : <KycPage   onComplete={() => setAuthView('login')} />
   }
 
+  // Logged in but wallet not funded → wallet setup with AI suggestions
+  if (!user.hasFullAccess) {
+    return <WalletSetupPage />
+  }
+
+  // Full access → dashboard
   return (
     <BrowserRouter>
       <Routes>
