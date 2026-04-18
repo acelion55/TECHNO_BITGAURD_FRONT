@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import useStore from './store/useStore'
 import LoginPage from './pages/LoginPage'
-import SignupPage from './pages/SignupPage'
+import KycPage from './pages/KycPage'
 import Layout from './components/layout/Layout'
 import DashboardPage from './pages/DashboardPage'
 import DcaPage from './pages/DcaPage'
@@ -13,27 +13,23 @@ import ChatPage from './pages/ChatPage'
 import './App.css'
 
 function App() {
-  const { user, fetchPrice, restoreSession } = useStore()
-  const [authView, setAuthView] = useState('login')   // 'login' | 'signup'
+  const { user, fetchPrice, restoreSession, logout } = useStore()
+  const [authView, setAuthView]           = useState('login')  // 'login' | 'kyc'
   const [sessionChecked, setSessionChecked] = useState(false)
 
-  // Restore session from httpOnly cookie on page load
   useEffect(() => {
     restoreSession().finally(() => setSessionChecked(true))
-    // Listen for forced logout from axios interceptor
-    const handler = () => { logout(); setSessionChecked(true); }
+    const handler = () => { logout(); setSessionChecked(true) }
     window.addEventListener('auth:logout', handler)
     return () => window.removeEventListener('auth:logout', handler)
   }, [])
 
-  // Refresh BTC price every 30s
   useEffect(() => {
     fetchPrice()
     const interval = setInterval(fetchPrice, 30000)
     return () => clearInterval(interval)
   }, [])
 
-  // Wait for session check before rendering
   if (!sessionChecked) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
@@ -42,14 +38,12 @@ function App() {
     )
   }
 
-  // Not logged in → show auth pages
   if (!user) {
     return authView === 'login'
-      ? <LoginPage  onSwitch={() => setAuthView('signup')} />
-      : <SignupPage onSwitch={() => setAuthView('login')} />
+      ? <LoginPage onSwitch={() => setAuthView('kyc')} switchLabel="New user? Complete KYC" />
+      : <KycPage   onComplete={() => setAuthView('login')} />
   }
 
-  // Logged in → show dashboard
   return (
     <BrowserRouter>
       <Routes>

@@ -5,7 +5,7 @@ import useStore from '../store/useStore';
 const inputCls = 'w-full bg-zinc-800 border border-zinc-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-orange-500 transition-colors placeholder:text-zinc-500';
 const labelCls = 'block text-zinc-400 text-xs font-medium mb-1.5 uppercase tracking-wider';
 
-export default function LoginPage({ onSwitch }) {
+export default function LoginPage({ onSwitch, switchLabel }) {
   const { login, forgotPassword, resetPassword, loading, error } = useStore();
   const [showMpin, setShowMpin] = useState(false);
   const [view, setView] = useState('login'); // 'login' | 'forgot' | 'reset'
@@ -98,7 +98,7 @@ export default function LoginPage({ onSwitch }) {
 
               <p className="text-center text-zinc-500 text-sm">
                 New here?{' '}
-                <button type="button" onClick={onSwitch} className="text-orange-400 hover:text-orange-300 font-medium">Create Account</button>
+                <button type="button" onClick={onSwitch} className="text-orange-400 hover:text-orange-300 font-medium">{switchLabel || 'Create Account'}</button>
               </p>
             </form>
           )}

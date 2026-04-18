@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import StatsCards from '../components/dashboard/StatsCards';
 import PortfolioChart from '../components/dashboard/PortfolioChart';
 import QuickActions from '../components/dashboard/QuickActions';
@@ -6,7 +7,7 @@ import ReasoningBox from '../components/common/ReasoningBox';
 import useStore from '../store/useStore';
 
 export default function DashboardPage() {
-  const { fetchPortfolio, fetchTaxReport, taxReport, aiDecision } = useStore();
+  const { fetchPortfolio, fetchTaxReport, taxReport, aiDecision, user } = useStore();
 
   useEffect(() => {
     fetchPortfolio();
@@ -19,6 +20,21 @@ export default function DashboardPage() {
         <h1 className="text-white text-2xl font-bold">Dashboard</h1>
         <p className="text-zinc-400 text-sm mt-1">Your autonomous Bitcoin DCA overview</p>
       </div>
+
+      {/* Access Gate Banner */}
+      {!user?.hasFullAccess && (
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 flex items-start gap-3">
+          <AlertTriangle size={18} className="text-yellow-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-yellow-300 font-semibold text-sm">Limited Access</p>
+            <p className="text-yellow-500 text-xs mt-0.5">
+              {!user?.walletFunded
+                ? 'Add ₹100+ to your wallet to unlock DCA Agent, Tax Optimizer, and AI Chat.'
+                : 'Complete KYC verification to unlock all features.'}
+            </p>
+          </div>
+        </div>
+      )}
 
       <StatsCards />
 
