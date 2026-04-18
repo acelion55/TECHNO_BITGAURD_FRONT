@@ -93,7 +93,7 @@ const useStore = create((set, get) => ({
     const { user } = get();
     if (!user) return;
     try {
-      const { data } = await api.get(`/portfolio/${user._id}`);
+      const { data } = await api.get('/portfolio');
       set((state) => ({
         portfolio: data.portfolio,
         btcPrice: { ...state.btcPrice, inr: data.currentPrice }
@@ -109,7 +109,7 @@ const useStore = create((set, get) => ({
     if (!user) return;
     set({ loading: true, aiDecision: null });
     try {
-      const { data } = await api.post('/dca/simulate-buy', { userId: user._id });
+      const { data } = await api.post('/dca/simulate-buy');
       set({ aiDecision: data.aiDecision, portfolio: data.portfolio, loading: false });
     } catch (e) {
       set({ error: e.response?.data?.error || 'Simulation failed', loading: false });
@@ -122,7 +122,7 @@ const useStore = create((set, get) => ({
     if (!user) return;
     set({ loading: true });
     try {
-      const { data } = await api.get(`/tax/report/${user._id}`);
+      const { data } = await api.get('/tax/report');
       set({ taxReport: data, loading: false });
     } catch (e) {
       set({ error: e.response?.data?.error, loading: false });
@@ -134,7 +134,7 @@ const useStore = create((set, get) => ({
     if (!user) return;
     set({ loading: true });
     try {
-      const { data } = await api.post('/tax/simulate-sell', { userId: user._id, btcToSell });
+      const { data } = await api.post('/tax/simulate-sell', { btcToSell });
       set({ sellSimulation: data, loading: false });
     } catch (e) {
       set({ error: e.response?.data?.error || 'Simulation failed', loading: false });
