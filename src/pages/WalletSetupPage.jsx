@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Wallet, TrendingUp, TrendingDown, Minus, Loader2, ChevronRight, Zap } from 'lucide-react';
+import { useState } from 'react';
+import { Wallet, TrendingUp, TrendingDown, Minus, Loader2, ChevronRight, Zap, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import useStore from '../store/useStore';
 
@@ -7,31 +8,49 @@ const inputCls = 'w-full bg-zinc-800 border border-zinc-700 text-white rounded-x
 const labelCls = 'block text-zinc-400 text-xs font-medium mb-1.5 uppercase tracking-wider';
 
 export default function WalletSetupPage() {
-  const { user, restoreSession } = useStore();
+  const { user, fetchWallet } = useStore();
+  const navigate = useNavigate();
   const [loading, setLoading]       = useState(false);
-  const [sugLoading, setSugLoading] = useState(true);
+  const [sugLoading, setSugLoading] = useState(false);
   const [error, setError]           = useState('');
   const [suggestion, setSuggestion] = useState(null);
+
+  const fetchSuggestion = async () => {
+    setSugLoading(true);
+    try {
+      const { data } = await api.get(`/wallet/suggest?amount=${monthly}`);
+      setSuggestion(data);
+      setRiskMode(data.riskMode || 'smart');
+    } catch {}
+    finally { setSugLoading(false); }
+  };
 
   const [amount, setAmount]         = useState(1000);
   const [monthly, setMonthly]       = useState(10000);
   const [duration, setDuration]     = useState(12);
   const [frequency, setFrequency]   = useState('monthly');
   const [riskMode, setRiskMode]     = useState('smart');
+  const [scheduleTime, setScheduleTime] = useState('09:00');
+  const [scheduleDays, setScheduleDays] = useState(['MON']);
+  const [scheduleDate, setScheduleDate] = useState(1);
 
-  // Fetch AI suggestion on mount
-  useEffect(() => {
-    api.get(`/wallet/suggest?amount=${monthly}`)
-      .then(({ data }) => { setSuggestion(data); setRiskMode(data.riskMode || 'smart'); })
-      .catch(() => {})
-      .finally(() => setSugLoading(false));
-  }, []);
+  const toggleDay = (day) => {
+    const days = scheduleDays.includes(day)
+      ? scheduleDays.filter(d => d !== day)
+      : [...scheduleDays, day];
+    if (days.length > 0) setScheduleDays(days);
+  };
 
+  const WEEKDAYS = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+  const WEEKDAY_LABELS = { MON:'Mon', TUE:'Tue', WED:'Wed', THU:'Thu', FRI:'Fri', SAT:'Sat', SUN:'Sun' };
+
+  // Fetch AI suggestion on mount — REMOVED, now triggered by button
   const handleDeposit = async () => {
     setLoading(true); setError('');
     try {
-      await api.post('/wallet/deposit', { amount: Number(amount), monthlyAmount: Number(monthly), frequency, durationMonths: Number(duration), riskMode });
-      await restoreSession(); // refresh user state with hasFullAccess: true
+      await api.post('/wallet/deposit', { amount: Number(amount), monthlyAmount: Number(monthly), frequency, durationMonths: Number(duration), riskMode, scheduleTime, scheduleDays, scheduleDate: Number(scheduleDate) });
+      await fetchWallet();
+      navigate('/');
     } catch (e) {
       setError(e.response?.data?.error || 'Deposit failed');
       setLoading(false);
@@ -47,8 +66,19 @@ export default function WalletSetupPage() {
   const SignalIcon = suggestion?.priceSignal === 'DIP' ? TrendingDown : suggestion?.priceSignal === 'HIGH' ? TrendingUp : Minus;
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
+      {/* Header with back button */}
+      <div className="flex items-center gap-4">
+        <button 
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
+        >
+          <ArrowLeft size={20} />
+          <span className="text-sm">Back to Dashboard</span>
+        </button>
+      </div>
+
+      <div className="max-w-lg mx-auto w-full flex flex-col gap-4">
 
         {/* Header */}
         <div className="text-center">
@@ -59,17 +89,39 @@ export default function WalletSetupPage() {
           <p className="text-zinc-400 text-sm mt-1">KYC verified. Add funds to activate your AI DCA agent.</p>
         </div>
 
-        {/* AI Market Suggestion */}
-        <div className={`bg-zinc-900 border rounded-2xl p-5 ${suggestion?.priceSignal === 'DIP' ? 'border-emerald-500/30' : suggestion?.priceSignal === 'HIGH' ? 'border-red-500/30' : 'border-zinc-700'}`}>
-          <div className="flex items-center gap-2 mb-3">
-            <Zap size={15} className="text-orange-400" />
-            <span className="text-white font-semibold text-sm">AI Market Analysis</span>
-            {sugLoading && <Loader2 size={13} className="text-zinc-500 animate-spin ml-auto" />}
+        {/* AI Market Analysis */}
+        <div className={`bg-zinc-900 border rounded-2xl p-5 ${
+          suggestion?.priceSignal === 'DIP' ? 'border-emerald-500/30'
+          : suggestion?.priceSignal === 'HIGH' ? 'border-red-500/30'
+          : 'border-zinc-700'
+        }`}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Zap size={15} className="text-orange-400" />
+              <span className="text-white font-semibold text-sm">AI Market Analysis</span>
+            </div>
+            {/* Analyse button — only show when not yet loaded or to refresh */}
+            {!sugLoading && (
+              <button onClick={fetchSuggestion}
+                className="flex items-center gap-1.5 text-xs bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 px-3 py-1.5 rounded-lg transition-colors">
+                <Zap size={11} />
+                {suggestion ? 'Refresh' : 'Analyse Market'}
+              </button>
+            )}
+            {sugLoading && <Loader2 size={13} className="text-zinc-500 animate-spin" />}
           </div>
 
           {sugLoading ? (
             <p className="text-zinc-500 text-sm">Analyzing market conditions...</p>
-          ) : suggestion ? (
+          ) : !suggestion ? (
+            <div className="flex flex-col items-center gap-3 py-4">
+              <p className="text-zinc-500 text-sm text-center">Click "Analyse Market" to get AI-powered investment insights based on live BTC price and 7-day trend.</p>
+              <button onClick={fetchSuggestion}
+                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
+                <Zap size={14} /> Analyse Market
+              </button>
+            </div>
+          ) : (
             <>
               <div className={`flex items-center gap-2 mb-2 ${signalColor}`}>
                 <SignalIcon size={16} />
@@ -91,8 +143,6 @@ export default function WalletSetupPage() {
                 </div>
               </div>
             </>
-          ) : (
-            <p className="text-zinc-500 text-sm">Market data unavailable. You can still proceed.</p>
           )}
         </div>
 
@@ -132,12 +182,71 @@ export default function WalletSetupPage() {
             </div>
             <div>
               <label className={labelCls}>Frequency</label>
-              <select value={frequency} onChange={e => setFrequency(e.target.value)} className={inputCls}>
-                <option value="monthly">Monthly</option>
-                <option value="weekly">Weekly</option>
-              </select>
+              <div className="grid grid-cols-3 gap-1.5 mt-0.5">
+                {['daily','weekly','monthly'].map(f => (
+                  <button key={f} type="button" onClick={() => setFrequency(f)}
+                    className={`py-2 rounded-lg text-xs font-medium border transition-all capitalize ${
+                      frequency === f ? 'bg-orange-500/10 border-orange-500/40 text-orange-400' : 'bg-zinc-800 border-zinc-700 text-zinc-400'
+                    }`}>
+                    {f === 'daily' ? '📅' : f === 'weekly' ? '📆' : '🗓️'} {f}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
+
+          {/* Daily: time picker */}
+          {frequency === 'daily' && (
+            <div>
+              <label className={labelCls}>Buy Time (IST)</label>
+              <input type="time" value={scheduleTime} onChange={e => setScheduleTime(e.target.value)} className={inputCls} />
+              <p className="text-zinc-500 text-xs mt-1">AI executes buy every day at this time</p>
+            </div>
+          )}
+
+          {/* Weekly: weekday multi-select */}
+          {frequency === 'weekly' && (
+            <div>
+              <label className={labelCls}>Buy Days</label>
+              <div className="flex gap-2 flex-wrap">
+                {WEEKDAYS.map(day => (
+                  <button key={day} type="button" onClick={() => toggleDay(day)}
+                    className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
+                      scheduleDays.includes(day) ? 'bg-orange-500/10 border-orange-500/40 text-orange-400' : 'bg-zinc-800 border-zinc-700 text-zinc-400'
+                    }`}>
+                    {WEEKDAY_LABELS[day]}
+                  </button>
+                ))}
+              </div>
+              <p className="text-zinc-500 text-xs mt-1.5">{scheduleDays.length} day{scheduleDays.length !== 1 ? 's' : ''} selected</p>
+            </div>
+          )}
+
+          {/* Monthly: date + duration side by side */}
+          {frequency === 'monthly' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelCls}>Buy Date</label>
+                <select value={scheduleDate} onChange={e => setScheduleDate(Number(e.target.value))} className={inputCls}>
+                  {Array.from({ length: 28 }, (_, i) => i + 1).map(d => (
+                    <option key={d} value={d}>{d}{d===1?'st':d===2?'nd':d===3?'rd':'th'} of month</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>Duration (months)</label>
+                <input type="number" min={1} max={60} value={duration} onChange={e => setDuration(e.target.value)} className={inputCls} />
+              </div>
+            </div>
+          )}
+
+          {/* Duration for daily/weekly */}
+          {frequency !== 'monthly' && (
+            <div>
+              <label className={labelCls}>Duration (months)</label>
+              <input type="number" min={1} max={60} value={duration} onChange={e => setDuration(e.target.value)} className={inputCls} />
+            </div>
+          )}
 
           <div>
             <label className={labelCls}>Risk Mode</label>

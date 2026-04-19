@@ -1,9 +1,12 @@
+import { useEffect } from 'react';
 import HoldingsTable from '../components/portfolio/HoldingsTable';
 import useStore from '../store/useStore';
 
 export default function TransactionsPage() {
-  const { portfolio } = useStore();
+  const { portfolio, fetchPortfolio } = useStore();
   const count = portfolio?.transactions?.length || 0;
+
+  useEffect(() => { fetchPortfolio(); }, []);
 
   return (
     <div className="flex flex-col gap-6">

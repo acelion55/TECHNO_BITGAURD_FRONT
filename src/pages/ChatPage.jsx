@@ -4,11 +4,13 @@ import useStore from '../store/useStore';
 
 const QUICK = [
   'What is my current portfolio value?',
-  'Should I buy BTC now?',
+  'Should I buy BTC now based on latest news?',
   'How much tax will I owe this year?',
-  'Explain tax loss harvesting',
-  'What is HIFO method?',
-  'How is my P&L calculated?',
+  'Which lots should I sell to minimize tax?',
+  'Am I in profit or loss on each lot?',
+  'What is the current BTC market trend?',
+  'How much have I invested so far?',
+  'Explain my HIFO tax saving opportunity',
 ];
 
 export default function ChatPage() {
@@ -51,7 +53,7 @@ export default function ChatPage() {
       <div>
         <h1 className="text-white text-2xl font-bold">AI Chat</h1>
         <p className="text-zinc-400 text-sm mt-1">
-          Powered by Gemini 2.5 Flash • Knows your full portfolio in real-time
+          Powered by Gemini 2.5 Flash • Live portfolio, tax data & BTC news
         </p>
       </div>
 

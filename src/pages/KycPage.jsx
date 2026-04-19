@@ -83,9 +83,9 @@ export default function KycPage({ onComplete }) {
   const handleComplete = () => call(async () => {
     const { data } = await api.post('/kyc/complete', { encryptedSession: encSession });
     setRegisteredEmail(data.user.email);
-    // Auto-login
+    // Auto-login after registration
     await login(data.user.email, mpin);
-    onComplete?.();
+    onComplete?.(); // This will switch back to login view, then user will be logged in
   });
 
   return (

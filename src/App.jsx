@@ -47,12 +47,8 @@ function App() {
       : <KycPage   onComplete={() => setAuthView('login')} />
   }
 
-  // Logged in but wallet not funded → wallet setup with AI suggestions
-  if (!user.hasFullAccess) {
-    return <WalletSetupPage />
-  }
-
-  // Full access → dashboard
+  // Logged in but wallet not funded → show dashboard with limited access
+  // WalletSetupPage will be accessible from within the app
   return (
     <BrowserRouter>
       <Routes>
@@ -61,6 +57,7 @@ function App() {
           <Route path="/dca"          element={<DcaPage />} />
           <Route path="/portfolio"    element={<PortfolioPage />} />
           <Route path="/transactions" element={<TransactionsPage />} />
+          <Route path="/wallet"        element={<WalletSetupPage />} />
           <Route path="/tax"          element={<TaxPage />} />
           <Route path="/chat"         element={<ChatPage />} />
           <Route path="*"             element={<Navigate to="/" replace />} />

@@ -41,7 +41,15 @@ const useStore = create((set, get) => ({
     try {
       const { data } = await api.get('/auth/me');
       set({ user: data.user, portfolio: data.portfolio });
-    } catch {
+    } catch (e) {
+      if (e.response?.status === 401) {
+        try {
+          await api.post('/auth/refresh');
+          const { data } = await api.get('/auth/me');
+          set({ user: data.user, portfolio: data.portfolio });
+          return;
+        } catch {}
+      }
       set({ user: null });
     }
   },
@@ -79,6 +87,18 @@ const useStore = create((set, get) => ({
     }
   },
 
+  // ── Wallet ────────────────────────────────────────────────────────────────
+  fetchWallet: async () => {
+    const { user } = get();
+    if (!user) return;
+    try {
+      const { data } = await api.get('/wallet');
+      set((state) => ({
+        user: { ...state.user, walletBalance: data.balance, walletFunded: data.funded }
+      }));
+    } catch {}
+  },
+
   // ── Price ─────────────────────────────────────────────────────────────────
   fetchPrice: async () => {
     try {
@@ -110,7 +130,12 @@ const useStore = create((set, get) => ({
     set({ loading: true, aiDecision: null });
     try {
       const { data } = await api.post('/dca/simulate-buy');
-      set({ aiDecision: data.aiDecision, portfolio: data.portfolio, loading: false });
+      set((state) => ({
+        aiDecision: data.aiDecision,
+        portfolio: data.portfolio,
+        user: { ...state.user, walletBalance: data.walletBalance ?? state.user.walletBalance },
+        loading: false
+      }));
     } catch (e) {
       set({ error: e.response?.data?.error || 'Simulation failed', loading: false });
     }

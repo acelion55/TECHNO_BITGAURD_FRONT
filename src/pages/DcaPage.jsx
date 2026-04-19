@@ -20,8 +20,14 @@ export default function DcaPage() {
             {[
               ['Name', user?.name],
               ['Email', user?.email],
-              ['Monthly Amount', `₹${user?.monthlyAmount?.toLocaleString('en-IN')}`],
+              ['Amount', `₹${user?.monthlyAmount?.toLocaleString('en-IN')}`],
               ['Frequency', user?.frequency],
+              ...(user?.frequency === 'daily'
+                ? [['Buy Time', user?.scheduleTime + ' IST']]
+                : user?.frequency === 'weekly'
+                ? [['Buy Days', (user?.scheduleDays || []).join(', ')]]
+                : [['Buy Date', `${user?.scheduleDate}${user?.scheduleDate === 1 ? 'st' : user?.scheduleDate === 2 ? 'nd' : user?.scheduleDate === 3 ? 'rd' : 'th'} of month`]]
+              ),
               ['Duration', `${user?.durationMonths} months`],
               ['Risk Mode', user?.riskMode],
             ].map(([label, val]) => (

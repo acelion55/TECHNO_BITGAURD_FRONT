@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Bot, PieChart, ArrowLeftRight,
-  FileText, MessageSquare, Bitcoin
+  FileText, MessageSquare, Bitcoin, Wallet
 } from 'lucide-react';
 
 const links = [
   { to: '/',           icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/wallet',     icon: Wallet,          label: 'Wallet' },
   { to: '/dca',        icon: Bot,             label: 'DCA Agent' },
   { to: '/portfolio',  icon: PieChart,        label: 'Portfolio' },
   { to: '/transactions', icon: ArrowLeftRight, label: 'Transactions' },

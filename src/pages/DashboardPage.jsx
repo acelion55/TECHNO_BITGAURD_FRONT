@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import StatsCards from '../components/dashboard/StatsCards';
 import PortfolioChart from '../components/dashboard/PortfolioChart';
 import QuickActions from '../components/dashboard/QuickActions';
@@ -8,6 +9,7 @@ import useStore from '../store/useStore';
 
 export default function DashboardPage() {
   const { fetchPortfolio, fetchTaxReport, taxReport, aiDecision, user } = useStore();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchPortfolio();
@@ -23,16 +25,27 @@ export default function DashboardPage() {
 
       {/* Access Gate Banner */}
       {!user?.hasFullAccess && (
-        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 flex items-start gap-3">
-          <AlertTriangle size={18} className="text-yellow-400 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-yellow-300 font-semibold text-sm">Limited Access</p>
-            <p className="text-yellow-500 text-xs mt-0.5">
-              {!user?.walletFunded
-                ? 'Add ₹100+ to your wallet to unlock DCA Agent, Tax Optimizer, and AI Chat.'
-                : 'Complete KYC verification to unlock all features.'}
-            </p>
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 flex items-center justify-between">
+          <div className="flex items-start gap-3">
+            <AlertTriangle size={18} className="text-yellow-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-yellow-300 font-semibold text-sm">Limited Access</p>
+              <p className="text-yellow-500 text-xs mt-0.5">
+                {!user?.walletFunded
+                  ? 'Add ₹100+ to your wallet to unlock DCA Agent, Tax Optimizer, and AI Chat.'
+                  : 'Complete KYC verification to unlock all features.'}
+              </p>
+            </div>
           </div>
+          {!user?.walletFunded && (
+            <button 
+              onClick={() => navigate('/wallet')}
+              className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold px-4 py-2 rounded-xl text-sm transition-colors shrink-0"
+            >
+              <Plus size={16} />
+              Add Funds
+            </button>
+          )}
         </div>
       )}
 

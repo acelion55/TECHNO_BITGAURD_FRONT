@@ -1,8 +1,10 @@
-import { Bitcoin, TrendingUp, LogOut } from 'lucide-react';
+import { Bitcoin, TrendingUp, LogOut, Wallet } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import useStore from '../../store/useStore';
 
 export default function Navbar() {
   const { btcPrice, user, logout } = useStore();
+  const navigate = useNavigate();
 
   const priceINR = btcPrice?.inr;
   const priceUSD = btcPrice?.usd;
@@ -37,14 +39,32 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* User */}
+      {/* Right: Wallet + User */}
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-          {user?.name?.[0]?.toUpperCase() || 'U'}
+        {/* Wallet Balance */}
+        <button
+          onClick={() => navigate('/wallet')}
+          className="flex items-center gap-2 bg-zinc-900 border border-zinc-700 hover:border-orange-500/50 rounded-xl px-3 py-2 transition-colors group"
+        >
+          <Wallet size={14} className="text-zinc-400 group-hover:text-orange-400 transition-colors" />
+          <div className="text-left">
+            <p className="text-white text-xs font-semibold leading-none">
+              ₹{(user?.walletBalance || 0).toLocaleString('en-IN')}
+            </p>
+            <p className="text-zinc-500 text-[10px] mt-0.5">Wallet</p>
+          </div>
+        </button>
+
+        {/* Avatar + Name */}
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+            {user?.name?.[0]?.toUpperCase() || 'U'}
+          </div>
+          <span className="text-zinc-300 text-sm hidden sm:block">{user?.name || 'User'}</span>
         </div>
-        <span className="text-zinc-300 text-sm hidden sm:block">{user?.name || 'User'}</span>
+
         <button onClick={logout} title="Logout"
-          className="text-zinc-500 hover:text-red-400 transition-colors ml-1">
+          className="text-zinc-500 hover:text-red-400 transition-colors">
           <LogOut size={16} />
         </button>
       </div>
